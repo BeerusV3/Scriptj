@@ -1,0 +1,341 @@
+--[[ phatv1 v27 KillAura | Key: 123 ]]
+local Players,RunService,UIS,WS=game:GetService("Players"),game:GetService("RunService"),game:GetService("UserInputService"),game:GetService("Workspace")
+local VIM=game:GetService("VirtualInputManager")
+local LP=Players.LocalPlayer
+pcall(function()for _,g in ipairs(LP:WaitForChild("PlayerGui"):GetChildren())do if g.Name:find("^phatv1")then g:Destroy()end end;for _,o in ipairs(WS:GetDescendants())do if o.Name:find("^phatv1_")then o:Destroy()end end end)
+
+local C={esp=false,items=false,mobs=false,allies=false,players=false,noclip=false,hitbox=false,hbSize=2.5,ka=false,kaR=60,kaSpd=0.15}
+local VK={point=1,score=1,coin=1,money=1,cash=1,gem=1,diamond=1,gold=1,silver=1,ruby=1,emerald=1,crystal=1,ore=1,pon=1,token=1,ticket=1,voucher=1,spin=1,chest=1,crate=1,reward=1,prize=1,loot=1,drop=1,pickup=1,collect=1,star=1,heart=1,key=1,seed=1,fruit=1,food=1,item=1,gun=1,weapon=1,rifle=1,pistol=1,shotgun=1,sniper=1,sword=1,blade=1,knife=1,axe=1,bow=1,ammo=1,bullet=1,armor=1,helmet=1,potion=1,egg=1,pet=1,skin=1,box=1}
+local BK={ray=1,beam=1,laser=1,line=1,trail=1,particle=1,spark=1,glow=1,hitbox=1,region=1,zone=1,invisible=1,transparent=1,water=1,lava=1,floor=1,baseplate=1,wall=1,ground=1,terrain=1,decor=1,effect=1,vfx=1,sound=1,light=1,spotlight=1,hint=1,handle=1,camera=1,spawn=1,checkpoint=1,tree=1,bush=1,rock=1,grass=1,sky=1,cloud=1,fog=1}
+local NC={}
+
+local function isValuable(o)
+    if not(o:IsA("BasePart")or o:IsA("Model"))then return false end
+    local n=o.Name
+    if n:find("HumanoidRootPart")or n=="Head"or n=="Torso"or n=="UpperTorso"or n=="LowerTorso"then return false end
+    if NC[n]~=nil then return NC[n]end
+    local s=n:lower();local ok=false
+    for k in pairs(BK)do if s:find(k,1,true)then NC[n]=false;return false end end
+    for k in pairs(VK)do if s:find(k,1,true)then ok=true;break end end
+    if not ok and o.Parent and o.Parent~=WS then local p=o.Parent.Name:lower();for k in pairs(VK)do if p:find(k,1,true)then ok=true;break end end end
+    NC[n]=ok;return ok
+end
+
+local HL,BB,HT={},{},{}
+local MAX_I,MAX_M,RAD=200,100,500
+
+local function rem(o)
+    if HL[o]then HL[o]:Destroy();HL[o]=nil end
+    if BB[o]then BB[o]:Destroy();BB[o]=nil end
+    HT[o]=nil
+end
+local function clr()for o in pairs(HL)do rem(o)end end
+
+local function add(o,col,label,typ)
+    if HL[o]or not o.Parent then return end
+    local hrp=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+    local part=o:IsA("Model")and(o.PrimaryPart or o:FindFirstChildWhichIsA("BasePart"))or(o:IsA("BasePart")and o)
+    if not part or(hrp and(part.Position-hrp.Position).Magnitude>RAD)then return end
+    local h=Instance.new("Highlight",o);h.Name="phatv1_hl";h.FillColor=col;h.OutlineColor=col;h.FillTransparency=.6;h.Adornee=o
+    local b=Instance.new("BillboardGui",o);b.Name="phatv1_bb";b.Size=UDim2.new(0,140,0,18);b.StudsOffset=Vector3.new(0,2.5,0);b.AlwaysOnTop=true;b.Adornee=o:FindFirstChild("Head")or part
+    local t=Instance.new("TextLabel",b);t.Size=UDim2.new(1,0,1,0);t.BackgroundTransparency=1;t.Text=label or o.Name;t.TextColor3=col;t.TextStrokeTransparency=0;t.Font=Enum.Font.GothamBold;t.TextSize=12
+    HL[o]=h;BB[o]=b;HT[o]=typ
+end
+
+local function getChar(p)local c=p.Character;if c and c:FindFirstChild("HumanoidRootPart")and c:FindFirstChildOfClass("Humanoid")and c:FindFirstChildOfClass("Humanoid").Health>0 then return c end end
+local function isAlly(p)return p.Team and LP.Team and p.Team==LP.Team end
+
+function refresh()
+    if not C.esp then clr();return end
+    local hrp=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+    for o in pairs(HL)do
+        local t=HT[o]
+        local bad=not o.Parent
+        if not bad then
+            if t=="mob"and not C.mobs then bad=true
+            elseif t=="item"and not C.items then bad=true
+            elseif t=="player"and not C.players then bad=true
+            elseif t=="ally"and not C.allies then bad=true
+            else
+                local h=o:FindFirstChildOfClass("Humanoid")
+                if h and h.Health<=0 then bad=true
+                elseif hrp then
+                    local p=o.PrimaryPart or o:FindFirstChildWhichIsA("BasePart")
+                    if p and(p.Position-hrp.Position).Magnitude>RAD then bad=true end
+                end
+            end
+        end
+        if bad then rem(o)end
+    end
+    if C.players then
+        local n=0
+        for _,p in ipairs(Players:GetPlayers())do
+            if p~=LP and n<20 then
+                local ch=getChar(p)
+                if ch then
+                    n=n+1
+                    if isAlly(p)then
+                        if C.allies then add(ch,Color3.fromRGB(0,255,0),"[ALLY] "..p.Name,"ally")end
+                    else
+                        add(ch,Color3.fromRGB(255,50,50),p.Name,"player")
+                    end
+                end
+            end
+        end
+    end
+    local nm,ni=0,0
+    for _,o in ipairs(WS:GetDescendants())do
+        if not HL[o]then
+            if C.mobs and nm<MAX_M and o:IsA("Model")then
+                local h=o:FindFirstChildOfClass("Humanoid")
+                if h and h.Health>0 and not Players:GetPlayerFromCharacter(o)and o~=LP.Character then
+                    nm=nm+1
+                    add(o,Color3.fromRGB(255,0,0),o.Name,"mob")
+                end
+            end
+            if C.items and ni<MAX_I and isValuable(o)then
+                ni=ni+1
+                add(o,Color3.fromRGB(255,215,0),o.Name,"item")
+            end
+        end
+    end
+end
+
+-- Hitbox
+local oS,oT,ad={},{},{}
+local function restoreHB()
+    for p,s in pairs(oS)do if p and p.Parent then p.Size=s;if oT[p]~=nil then p.Transparency=oT[p]end end end
+    for _,a in pairs(ad)do if a then a:Destroy()end end
+    oS,oT,ad={},{},{}
+end
+RunService.Heartbeat:Connect(function()
+    if not C.hitbox then restoreHB();return end
+    local ch=LP.Character;local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    for _,m in ipairs(WS:GetDescendants())do
+        local hum=m:FindFirstChildOfClass("Humanoid")
+        if m:IsA("Model")and hum and hum.Health>0 and not Players:GetPlayerFromCharacter(m)and m~=LP.Character then
+            for _,p in ipairs(m:GetDescendants())do
+                if p:IsA("BasePart")then
+                    local n=p.Name:lower()
+                    if n=="head"or n=="torso"or n=="uppertorso"or n=="lowertorso"or n=="humanoidrootpart"or n:find("hitbox")or n:find("body")then
+                        if(p.Position-hrp.Position).Magnitude<100 then
+                            if not oS[p]then oS[p]=p.Size;oT[p]=p.Transparency end
+                            local b=oS[p];p.Size=Vector3.new(b.X*C.hbSize,b.Y*C.hbSize,b.Z*C.hbSize)
+                            if not ad[p]then local bx=Instance.new("BoxHandleAdornment",p);bx.Adornee=p;bx.Color3=Color3.fromRGB(255,0,0);bx.Transparency=.4;bx.AlwaysOnTop=true;bx.ZIndex=10;ad[p]=bx end
+                            ad[p].Size=p.Size
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- Noclip
+local lSY,tCd,nA=nil,0,0
+local rp=RaycastParams.new();rp.FilterType=Enum.RaycastFilterType.Exclude
+RunService.Stepped:Connect(function(_,dt)
+    if not C.noclip then lSY=nil;tCd=0;return end
+    local ch=LP.Character;if not ch then return end
+    local hrp=ch:FindFirstChild("HumanoidRootPart");local hum=ch:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
+    if hum.FloorMaterial~=Enum.Material.Air then lSY=hrp.Position.Y end
+    nA=nA+dt;if nA<.05 then return end;nA=0;tCd=math.max(0,tCd-dt)
+    for _,p in ipairs(ch:GetDescendants())do if p:IsA("BasePart")then p.CanCollide=false end end
+    if tCd<=0 and lSY and hrp.Position.Y<lSY-25 then
+        rp.FilterDescendantsInstances={ch}
+        local r=WS:Raycast(Vector3.new(hrp.Position.X,lSY+50,hrp.Position.Z),Vector3.new(0,-200,0),rp)
+        local ty=math.max(r and r.Position.Y+3 or lSY+3,lSY+3)
+        hrp.CFrame=CFrame.new(hrp.Position.X,ty,hrp.Position.Z);hrp.AssemblyLinearVelocity=Vector3.zero
+        lSY=ty;tCd=1.5
+    end
+end)
+
+-- ============ KILL AURA ============
+local kaCd=0
+local function getEquippedTool()
+    local ch=LP.Character
+    if not ch then return nil end
+    return ch:FindFirstChildOfClass("Tool")
+end
+
+local function tryEquipTool()
+    local ch=LP.Character
+    if not ch then return end
+    local hum=ch:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    local bp=LP:FindFirstChild("Backpack")
+    if not bp then return end
+    for _,t in ipairs(bp:GetChildren())do
+        if t:IsA("Tool")then
+            pcall(function() hum:EquipTool(t) end)
+            return
+        end
+    end
+end
+
+local function findTarget(hrp)
+    local nearest,nd=nil,C.kaR
+    for _,m in ipairs(WS:GetDescendants())do
+        if m:IsA("Model")then
+            local h=m:FindFirstChildOfClass("Humanoid")
+            if h and h.Health>0 and not Players:GetPlayerFromCharacter(m) and m~=LP.Character then
+                local p=m.PrimaryPart or m:FindFirstChild("HumanoidRootPart") or m:FindFirstChild("Head")
+                if p then
+                    local d=(p.Position-hrp.Position).Magnitude
+                    if d<nd then nd=d;nearest=m end
+                end
+            end
+        end
+    end
+    return nearest
+end
+
+local function fireAttack(tool,targetPart)
+    -- 1. Tool.Activate
+    pcall(function() tool:Activate() end)
+    -- 2. Mô phỏng mouse click (nhiều tool dùng MouseButton1)
+    pcall(function()
+        VIM:SendMouseButtonEvent(0,0,0,true,game,1)
+        task.wait(0.01)
+        VIM:SendMouseButtonEvent(0,0,0,false,game,1)
+    end)
+    -- 3. Xoay về target để tool handle quét trúng
+    if targetPart then
+        local ch=LP.Character
+        local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            pcall(function()
+                local dir=Vector3.new(targetPart.Position.X-hrp.Position.X,0,targetPart.Position.Z-hrp.Position.Z)
+                if dir.Magnitude>0.1 then
+                    hrp.CFrame=CFrame.new(hrp.Position,hrp.Position+dir.Unit)
+                end
+            end)
+        end
+    end
+end
+
+RunService.Heartbeat:Connect(function(dt)
+    if not C.ka then return end
+    kaCd=kaCd-dt
+    if kaCd>0 then return end
+    local ch=LP.Character
+    if not ch then return end
+    local hrp=ch:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    local tool=getEquippedTool()
+    if not tool then
+        tryEquipTool()
+        return
+    end
+    
+    local target=findTarget(hrp)
+    if not target then return end
+    
+    local tp=target.PrimaryPart or target:FindFirstChild("HumanoidRootPart") or target:FindFirstChild("Head")
+    fireAttack(tool,tp)
+    kaCd=C.kaSpd
+end)
+
+-- GUI
+local SG=Instance.new("ScreenGui",LP:WaitForChild("PlayerGui"));SG.Name="phatv1";SG.ResetOnSpawn=false;SG.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+local KG=Instance.new("Frame",SG);KG.Size=UDim2.new(0,340,0,220);KG.Position=UDim2.new(.5,-170,.5,-110);KG.BackgroundColor3=Color3.fromRGB(15,18,30);KG.BorderSizePixel=0;KG.Active=true;KG.Draggable=true
+Instance.new("UICorner",KG).CornerRadius=UDim.new(0,14)
+local KGS=Instance.new("UIStroke",KG);KGS.Color=Color3.fromRGB(0,200,255);KGS.Thickness=1.5
+local KGT=Instance.new("TextLabel",KG);KGT.Size=UDim2.new(1,0,0,50);KGT.BackgroundTransparency=1;KGT.Text="🔐 phatv1 KEY";KGT.TextColor3=Color3.fromRGB(0,220,255);KGT.Font=Enum.Font.GothamBold;KGT.TextSize=22
+local KGS2=Instance.new("TextLabel",KG);KGS2.Size=UDim2.new(1,0,0,20);KGS2.Position=UDim2.new(0,0,0,48);KGS2.BackgroundTransparency=1;KGS2.Text="Nhập key để mở khóa";KGS2.TextColor3=Color3.fromRGB(140,150,180);KGS2.Font=Enum.Font.Gotham;KGS2.TextSize=11
+local KBx=Instance.new("TextBox",KG);KBx.Size=UDim2.new(1,-60,0,44);KBx.Position=UDim2.new(0,30,0,80);KBx.BackgroundColor3=Color3.fromRGB(30,35,50);KBx.BorderSizePixel=0;KBx.PlaceholderText="Nhập key...";KBx.PlaceholderColor3=Color3.fromRGB(100,110,140);KBx.Text="";KBx.TextColor3=Color3.fromRGB(255,255,255);KBx.Font=Enum.Font.GothamBold;KBx.TextSize=16;KBx.ClearTextOnFocus=false
+Instance.new("UICorner",KBx).CornerRadius=UDim.new(0,8)
+local KBS=Instance.new("UIStroke",KBx);KBS.Color=Color3.fromRGB(0,150,220);KBS.Thickness=1.5
+local KBtn=Instance.new("TextButton",KG);KBtn.Size=UDim2.new(1,-60,0,44);KBtn.Position=UDim2.new(0,30,0,138);KBtn.BackgroundColor3=Color3.fromRGB(0,150,255);KBtn.Text="XÁC NHẬN";KBtn.TextColor3=Color3.fromRGB(255,255,255);KBtn.Font=Enum.Font.GothamBold;KBtn.TextSize=14;KBtn.BorderSizePixel=0
+Instance.new("UICorner",KBtn).CornerRadius=UDim.new(0,8)
+local KM=Instance.new("TextLabel",KG);KM.Size=UDim2.new(1,-40,0,22);KM.Position=UDim2.new(0,20,0,188);KM.BackgroundTransparency=1;KM.Text="";KM.TextColor3=Color3.fromRGB(255,80,80);KM.Font=Enum.Font.GothamBold;KM.TextSize=12
+
+local FAB=Instance.new("TextButton",SG);FAB.Size=UDim2.new(0,50,0,50);FAB.Position=UDim2.new(0,20,.3,0);FAB.BackgroundColor3=Color3.fromRGB(0,150,255);FAB.Text="≡";FAB.TextColor3=Color3.fromRGB(255,255,255);FAB.Font=Enum.Font.GothamBold;FAB.TextSize=24;FAB.BorderSizePixel=0;FAB.Draggable=true;FAB.Visible=false
+Instance.new("UICorner",FAB).CornerRadius=UDim.new(1,0);Instance.new("UIStroke",FAB).Color=Color3.fromRGB(0,200,255)
+
+local MF=Instance.new("Frame",SG);MF.Size=UDim2.new(0,720,0,320);MF.Position=UDim2.new(.5,-360,.5,-160);MF.BackgroundColor3=Color3.fromRGB(20,20,25);MF.BackgroundTransparency=.1;MF.BorderSizePixel=0;MF.Visible=false
+Instance.new("UICorner",MF).CornerRadius=UDim.new(0,8)
+local TT=Instance.new("TextLabel",MF);TT.Size=UDim2.new(1,-160,0,35);TT.BackgroundColor3=Color3.fromRGB(30,30,40);TT.Text="phatv1";TT.TextColor3=Color3.fromRGB(0,200,255);TT.Font=Enum.Font.GothamBold;TT.TextSize=16
+local MB=Instance.new("TextButton",MF);MB.Size=UDim2.new(0,28,0,28);MB.Position=UDim2.new(1,-72,0,4);MB.BackgroundColor3=Color3.fromRGB(60,60,70);MB.Text="−";MB.TextColor3=Color3.fromRGB(255,255,255);MB.Font=Enum.Font.GothamBold;MB.TextSize=20
+Instance.new("UICorner",MB).CornerRadius=UDim.new(0,6)
+local XB=Instance.new("TextButton",MF);XB.Size=UDim2.new(0,28,0,28);XB.Position=UDim2.new(1,-40,0,4);XB.BackgroundColor3=Color3.fromRGB(200,40,40);XB.Text="X";XB.TextColor3=Color3.fromRGB(255,255,255);XB.Font=Enum.Font.GothamBold;XB.TextSize=15
+Instance.new("UICorner",XB).CornerRadius=UDim.new(0,6)
+
+local dr,dS,dB=false,nil,nil
+TT.InputBegan:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then dr=true;dS=i.Position;dB=MF.Position end end)
+UIS.InputChanged:Connect(function(i)if dr and(i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch)then local d=i.Position-dS;MF.Position=MF.Position:Lerp(UDim2.new(dB.X.Scale,dB.X.Offset+d.X,dB.Y.Scale,dB.Y.Offset+d.Y),.35)end end)
+UIS.InputEnded:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then dr=false end end)
+
+local mn,closed=false,false
+FAB.MouseButton1Click:Connect(function()if not closed then MF.Visible=not MF.Visible end end)
+MB.MouseButton1Click:Connect(function()
+    mn=not mn
+    for _,v in ipairs(MF:GetChildren())do if v~=TT and v~=MB and v~=XB then v.Visible=not mn end end
+    MF.Size=UDim2.new(0,720,0,mn and 35 or 320);MB.Text=mn and"+"or"−"
+end)
+
+local function col(x,w)
+    local f=Instance.new("ScrollingFrame",MF);f.Size=UDim2.new(0,w,1,-50);f.Position=UDim2.new(0,x,0,45);f.BackgroundTransparency=1;f.BorderSizePixel=0;f.ScrollBarThickness=3;f.CanvasSize=UDim2.new(0,0,0,0);f.AutomaticCanvasSize=Enum.AutomaticSize.Y
+    Instance.new("UIListLayout",f).Padding=UDim.new(0,5);return f
+end
+local CA,CB=col(10,350),col(370,340)
+
+local function section(p,txt)
+    local l=Instance.new("TextLabel",p);l.Size=UDim2.new(1,0,0,22);l.BackgroundTransparency=1;l.Text=txt;l.TextColor3=Color3.fromRGB(0,200,255);l.Font=Enum.Font.GothamBold;l.TextSize=12;l.TextXAlignment=Enum.TextXAlignment.Left
+end
+
+local function toggle(p,txt,def,cb)
+    local f=Instance.new("Frame",p);f.Size=UDim2.new(1,0,0,30);f.BackgroundColor3=Color3.fromRGB(35,35,45);Instance.new("UICorner",f).CornerRadius=UDim.new(0,6)
+    local l=Instance.new("TextLabel",f);l.Size=UDim2.new(1,-50,1,0);l.Position=UDim2.new(0,8,0,0);l.BackgroundTransparency=1;l.Text=txt;l.TextColor3=Color3.fromRGB(220,220,220);l.Font=Enum.Font.Gotham;l.TextSize=12;l.TextXAlignment=Enum.TextXAlignment.Left
+    local b=Instance.new("TextButton",f);b.Size=UDim2.new(0,40,0,20);b.Position=UDim2.new(1,-46,.5,-10);b.BackgroundColor3=def and Color3.fromRGB(0,200,100)or Color3.fromRGB(60,60,70);b.Text=def and"ON"or"OFF";b.TextColor3=Color3.fromRGB(255,255,255);b.Font=Enum.Font.GothamBold;b.TextSize=10
+    Instance.new("UICorner",b).CornerRadius=UDim.new(0,6)
+    local s=def
+    b.MouseButton1Click:Connect(function()
+        s=not s;b.Text=s and"ON"or"OFF";b.BackgroundColor3=s and Color3.fromRGB(0,200,100)or Color3.fromRGB(60,60,70);cb(s)
+    end)
+end
+
+local function slider(p,txt,mn2,mx,def,cb)
+    local f=Instance.new("Frame",p);f.Size=UDim2.new(1,0,0,48);f.BackgroundColor3=Color3.fromRGB(35,35,45);Instance.new("UICorner",f).CornerRadius=UDim.new(0,6)
+    local l=Instance.new("TextLabel",f);l.Size=UDim2.new(1,-16,0,18);l.Position=UDim2.new(0,8,0,2);l.BackgroundTransparency=1;l.Text=txt..": "..def;l.TextColor3=Color3.fromRGB(220,220,220);l.Font=Enum.Font.Gotham;l.TextSize=11;l.TextXAlignment=Enum.TextXAlignment.Left
+    local bar=Instance.new("Frame",f);bar.Size=UDim2.new(1,-16,0,7);bar.Position=UDim2.new(0,8,0,28);bar.BackgroundColor3=Color3.fromRGB(60,60,70);Instance.new("UICorner",bar).CornerRadius=UDim.new(1,0)
+    local fill=Instance.new("Frame",bar);fill.Size=UDim2.new((def-mn2)/(mx-mn2),0,1,0);fill.BackgroundColor3=Color3.fromRGB(0,200,255);Instance.new("UICorner",fill).CornerRadius=UDim.new(1,0)
+    local drag=false
+    local function upd(i)local r=math.clamp((i.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1);local v=math.floor(mn2+(mx-mn2)*r+.5);fill.Size=UDim2.new(r,0,1,0);l.Text=txt..": "..v;cb(v)end
+    bar.InputBegan:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=true;upd(i)end end)
+    UIS.InputEnded:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end end)
+    UIS.InputChanged:Connect(function(i)if drag and(i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch)then upd(i)end end)
+end
+
+XB.MouseButton1Click:Connect(function()
+    closed=true
+    C.esp=false;C.noclip=false;C.hitbox=false;C.items=false;C.mobs=false;C.allies=false;C.players=false;C.ka=false
+    clr();restoreHB()
+    MF.Visible=false;FAB.Visible=false
+end)
+
+section(CA,"ESP & DI CHUYỂN")
+toggle(CA,"Bật toàn bộ",false,function(s)C.esp=s;C.noclip=s;refresh()end)
+toggle(CA,"ESP Vật phẩm",false,function(s)C.items=s;if s then C.esp=true end;refresh()end)
+toggle(CA,"ESP Quái",false,function(s)C.mobs=s;if s then C.esp=true end;refresh()end)
+toggle(CA,"ESP Đồng đội",false,function(s)C.allies=s;if s then C.esp=true end;refresh()end)
+toggle(CA,"ESP Người chơi",false,function(s)C.players=s;if s then C.esp=true end;refresh()end)
+toggle(CA,"Noclip",false,function(s)C.noclip=s;if not s then lSY=nil;tCd=0 end end)
+
+section(CB,"CHIẾN ĐẤU")
+toggle(CB,"Hitbox Mở Rộng",false,function(s)C.hitbox=s;if not s then restoreHB()end end)
+slider(CB,"Kích thước",1.5,5,C.hbSize,function(v)C.hbSize=v end)
+toggle(CB,"Kill Aura (tự đánh)",false,function(s)C.ka=s;kaCd=0 end)
+slider(CB,"Bán kính KA",20,150,C.kaR,function(v)C.kaR=v end)
+toggle(CB,"Ẩn nút tròn",true,function(s)FAB.Visible=s end)
+
+-- Key
+local function showMain()
+    KG:TweenSize(UDim2.new(0,340,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Quad,.25,true)
+    task.delay(.3,function()KG.Visible=false;FAB.Visible=true end)
+end
+local function shake()
+    local o=KG.Position
